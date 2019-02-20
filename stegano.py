@@ -33,6 +33,26 @@ def single_encode(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
     return result
 
 
+def image_diff(image1, image2):
+    with Image.open(image1) as im1:
+        with Image.open(image2) as im2:
+            assert im1.size == im2.size
+            width, height = im1.size
+            diff = {}
+            for x in range(width):
+                for y in range(height):
+                    pixel1 = im1.getpixel((x,y))
+                    pixel2 = im2.getpixel((x,y))
+                    if pixel1 != pixel2:
+                        r = pixel1[0] - pixel2[0]
+                        g = pixel1[1] - pixel2[1]
+                        b = pixel1[2] - pixel2[2]
+                        diff[(x, y)] = (r, g, b)
+                    else:
+                        continue
+    return diff
+
+
 def encode(image_filename, secret_filename) -> str:
     
     # Alphabet erstellen
