@@ -3,7 +3,7 @@ from string import printable
 from itertools import product
 from typing import Dict, Tuple
 
-__all__ = ["encode", "image_diff"]
+__all__ = ["encode", "decode", "image_diff"]
 
 def _create_alphabet() -> str:
     """Erstellt ein String aller erlaubter Zeichen."""
@@ -32,6 +32,12 @@ def _single_encode(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
         tmp_pixel[i] = (pixel[i] + code[i]) % 256
     result: Tuple = tuple(tmp_pixel)
     return result
+
+
+def _single_decode(code: Tuple[int], table: Dict) -> str:
+    table = dict(zip(table.values(), table.keys()))
+    char = table[code]
+    return char
 
 
 def image_diff(image1, image2):
@@ -117,4 +123,15 @@ def encode(image_filename, secret_filename) -> str:
         result_filename = f"{image_filename}_secret.png"
         im.save(result_filename, "png")
         print(result_filename)
-    
+
+
+def decode(orig, new):
+    table = _create_table()
+    diff = image_diff(new, orig)
+    text = ""
+    for coor in diff:
+        pixel = diff[coor]
+        char = _single_decode(pixel, table)
+        text += char
+    print(text)
+    return text
