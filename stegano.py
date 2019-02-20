@@ -100,6 +100,7 @@ def encode(image_filename, secret_filename) -> str:
     length_text = len(secret)
     length_image = len(pixels)
 
+    # Längen vergleichen
     if length_text > length_image:
         raise Exception("Text zu lang!")
     elif length_image > length_text:
@@ -107,17 +108,16 @@ def encode(image_filename, secret_filename) -> str:
 
     length = min(length_image, length_text)
 
+    # Bild öffnen
     with Image.open(image_filename) as im:
         counter = 0
         while counter < length:
-            # print(counter)
             (x, y) = pixels[counter]
             pixel = im.getpixel((x,y))
             char = secret[counter]
             new_pixel = _single_encode(pixel, char, table)
             im.putpixel((x,y), new_pixel)
             counter += 1
-        im.show()
     
         # Bild abspeichern
         result_filename = f"{image_filename}_secret.png"
