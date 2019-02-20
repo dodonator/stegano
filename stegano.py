@@ -3,14 +3,15 @@ from string import printable
 from itertools import product
 from typing import Dict, Tuple
 
+__all__ = ["encode", "image_diff"]
 
-def create_alphabet() -> str:
+def _create_alphabet() -> str:
     """Erstellt ein String aller erlaubter Zeichen."""
     return printable
 
-def create_table():
+def _create_table():
     """Erstelle die Codierungstabelle."""
-    alphabet = create_alphabet()
+    alphabet = _create_alphabet()
     code = list(product((-2, -1, 1, 2, 3), repeat=3))
     len_a = len(alphabet)
     len_c = len(code)
@@ -21,7 +22,7 @@ def create_table():
     return dict(list(zip(alphabet, code)))
 
 
-def single_encode(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
+def _single_encode(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
     alphabet = "".join(list(table.keys()))
     assert len(char) == 1
     assert char in alphabet
@@ -56,10 +57,10 @@ def image_diff(image1, image2):
 def encode(image_filename, secret_filename) -> str:
     
     # Alphabet erstellen
-    alphabet = create_alphabet()
+    alphabet = _create_alphabet()
 
     # Codierungstabelle erstellen
-    table: Dict = create_table()
+    table: Dict = _create_table()
 
     # Klartext einlesen
     with open(secret_filename, "r") as file_obj:
@@ -107,7 +108,7 @@ def encode(image_filename, secret_filename) -> str:
             (x, y) = pixels[counter]
             pixel = im.getpixel((x,y))
             char = secret[counter]
-            new_pixel = single_encode(pixel, char, table)
+            new_pixel = _single_encode(pixel, char, table)
             im.putpixel((x,y), new_pixel)
             counter += 1
         im.show()
