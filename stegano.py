@@ -11,7 +11,7 @@ def create_alphabet() -> str:
 def create_table():
     """Erstelle die Codierungstabelle."""
     alphabet = create_alphabet()
-    code = list(product((-2, -1, 1, 2), repeat=3))
+    code = list(product((-2, -1, 1, 2, 3), repeat=3))
     len_a = len(alphabet)
     len_c = len(code)
     if len_a > len_c:
@@ -21,67 +21,79 @@ def create_table():
     return dict(list(zip(alphabet, code)))
 
 
-def convert(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
+def single_encode(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
+    alphabet = "".join(list(table.keys()))
     assert len(char) == 1
-    assert char in (ascii_lowercase + "*")
-    tmp = table.get(char, "*")
+    assert char in alphabet
+    code = table.get(char, "*")
     tmp_pixel = [0, 0, 0]
     for i in range(3):
-        tmp_pixel[i] = (pixel[i] + tmp[i]) % 256
+        tmp_pixel[i] = (pixel[i] + code[i]) % 256
     result: Tuple = tuple(tmp_pixel)
     return result
 
 
 def encode(image_filename, secret_filename) -> str:
+    
+    # Alphabet erstellen
+    alphabet = create_alphabet()
+
     # Codierungstabelle erstellen
     table: Dict = create_table()
 
     # Klartext einlesen
     with open(secret_filename, "r") as file_obj:
         secret = ""
-        char = "1"
-        while char:
-            char = file_obj.read(1)
-            # Nur Kleinbuchstaben akzeptieren!
-            if char in (ascii_lowercase + "*"):
-                secret += char
-            elif char.lower() in (ascii_lowercase + "*"):
-                secret += char.lower()
-            else:
-                secret += "*"
+        for line in file_obj:
+            for char in line:
+                if char in alphabet:
+                    secret += char
+                else:
+                    secret += "*"
 
-        length = len(secret)
-
-    # Bild öffnen
+    # Anzahl benutzbarer Pixel zählen
+    pixels = []
     with Image.open(image_filename) as im:
         width, height = im.size
-        counter = 0
         # Spalten durchlaufen
         for x in range(width):
             # Zeilen durchlaufen
             for y in range(height):
-                if counter >= length:
-                    break
-
-                old_pixel = im.getpixel((x, y))
-                # Es sollen keine Übergänge stattfinden
-                if 0 in old_pixel or 255 in old_pixel:
+                pixel = im.getpixel((x, y))
+                r, g, b = pixel
+                if r < 2 or r > 253:
                     continue
+                elif g < 2 or g > 253:
+                    continue
+                elif b < 2 or b > 253:
+                    continue
+                else:
+                    pixels.append((x, y))
+    
+    length_text = len(secret)
+    length_image = len(pixels)
 
-                char = secret[counter]
-                new_pixel = convert(old_pixel, char, table)
-                im.putpixel((x, y), new_pixel)
-                counter += 1
+    if length_text > length_image:
+        raise Exception("Text zu lang!")
+    elif length_image > length_text:
+        pixels = pixels[:length_text]
 
-        # Erzeugtes Bild abspeichern
-        new_filename = f"{image_filename}_secret.png"
-        im.save(new_filename, mode="png")
-        print(f"filename: {new_filename}")
+    length = min(length_image, length_text)
+
+    with Image.open(image_filename) as im:
+        counter = 0
+        while counter < length:
+            # print(counter)
+            (x, y) = pixels[counter]
+            pixel = im.getpixel((x,y))
+            char = secret[counter]
+            new_pixel = single_encode(pixel, char, table)
+            im.putpixel((x,y), new_pixel)
+            counter += 1
         im.show()
-        return new_filename
-
-
-if __name__ == "__main__":
-    image_filename = "/home/dodo/dev/testtexte/Bild.jpg"
-    secret_filename = "/home/dodo/dev/testtexte/rp-online.html"
-    encode(image_filename, secret_filename)
+    
+        # Bild abspeichern
+        result_filename = f"{image_filename}_secret.png"
+        im.save(result_filename, "png")
+        print(result_filename)
+    
