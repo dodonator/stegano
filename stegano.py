@@ -4,6 +4,9 @@ from itertools import product
 from typing import Dict, Tuple
 
 
+def create_alphabet():
+    pass
+
 def create_table():
     ascii = ascii_lowercase + "*"
     code = list(product((0, -1, 1), repeat=3))
