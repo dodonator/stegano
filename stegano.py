@@ -1,16 +1,24 @@
 from PIL import Image
-from string import ascii_lowercase
+from string import printable
 from itertools import product
 from typing import Dict, Tuple
 
 
-def create_alphabet():
-    pass
+def create_alphabet() -> str:
+    """Erstellt ein String aller erlaubter Zeichen."""
+    return printable
 
 def create_table():
-    ascii = ascii_lowercase + "*"
-    code = list(product((0, -1, 1), repeat=3))
-    return dict(list(zip(ascii, code)))
+    """Erstelle die Codierungstabelle."""
+    alphabet = create_alphabet()
+    code = list(product((-2, -1, 1, 2), repeat=3))
+    len_a = len(alphabet)
+    len_c = len(code)
+    if len_a > len_c:
+        alphabet = alphabet[:len_c]
+    elif len_c > len_a:
+        code = code[:len_a]
+    return dict(list(zip(alphabet, code)))
 
 
 def convert(pixel: Tuple[int], char: str, table: Dict) -> Tuple:
